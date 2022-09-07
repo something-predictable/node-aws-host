@@ -1,0 +1,88 @@
+/* eslint-disable no-console */
+import { ClientInfo, createContext, LogEntry, LogTransport } from '@riddance/host/context'
+import { Metadata } from '@riddance/host/registry'
+import { randomUUID } from 'node:crypto'
+import { SnsEventTransport } from './lib/sns.js'
+
+export * from '@riddance/service/context'
+
+export interface AwsContext {
+    getRemainingTimeInMillis(): number
+    readonly functionName: string
+    readonly functionVersion: string
+    readonly invokedFunctionArn: string
+    readonly memoryLimitInMB: number
+    readonly awsRequestId: string
+    readonly logGroupName: string
+    readonly logStreamName: string
+    callbackWaitsForEmptyEventLoop: boolean
+}
+
+class ConsoleLogger implements LogTransport {
+    sendEntries(entries: LogEntry[]) {
+        for (const entry of entries) {
+            switch (entry.level) {
+                case 'trace':
+                case 'debug':
+                    console.debug(entry.json)
+                    return
+                case 'info':
+                    console.log(entry.json)
+                    return
+                case 'warning':
+                    console.warn(entry.json)
+                    return
+                case 'error':
+                case 'fatal':
+                    console.error(entry.json)
+                    return
+            }
+        }
+        return undefined
+    }
+}
+
+const consoleLogger = new ConsoleLogger()
+
+const hostInfo = {
+    instance: {
+        id: randomUUID().replaceAll('-', ''),
+    },
+    nodejs: {
+        version: process.version.substring(1),
+    },
+    function: {
+        version: process.env.AWS_LAMBDA_FUNCTION_VERSION,
+        executionEnvironment: process.env.AWS_EXECUTION_ENV,
+    },
+}
+
+export function createAwsContext(
+    context: AwsContext,
+    stageVariables: { [key: string]: string },
+    client: ClientInfo,
+    meta?: Metadata,
+) {
+    const ctx = createContext(
+        client,
+        [consoleLogger],
+        new SnsEventTransport(),
+        { default: 15 },
+        new AbortController(),
+        meta,
+        {
+            ...process.env,
+            ...stageVariables,
+        } as { [key: string]: string },
+    )
+    ctx.log.enrichReserved({
+        host: hostInfo,
+        function: {
+            name: context.functionName,
+            version: context.functionVersion,
+            memoryLimit: context.memoryLimitInMB,
+            timeout: context.getRemainingTimeInMillis(),
+        },
+    })
+    return ctx
+}
