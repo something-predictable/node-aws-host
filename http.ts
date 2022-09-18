@@ -127,7 +127,7 @@ async function asyncIndex(
               },
     )
 
-    await measure(context.log, 'flush', flush)
+    await measure(log, 'flush', flush)
 }
 
 export function awsHandler(
