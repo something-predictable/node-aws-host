@@ -25,17 +25,17 @@ class ConsoleLogger implements LogTransport {
                 case 'trace':
                 case 'debug':
                     console.debug(entry.json)
-                    return
+                    break
                 case 'info':
                     console.log(entry.json)
-                    return
+                    break
                 case 'warning':
                     console.warn(entry.json)
-                    return
+                    break
                 case 'error':
                 case 'fatal':
                     console.error(entry.json)
-                    return
+                    break
             }
         }
         return undefined
