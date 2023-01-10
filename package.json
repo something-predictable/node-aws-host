@@ -1,42 +1,39 @@
 {
-    "name": "@riddance/aws-host",
-    "version": "0.0.5",
-    "type": "module",
-    "license": "MIT",
-    "engines": {
-        "node": ">=16"
-    },
-    "keywords": [
-        "riddance",
-        "serverless",
-        "environment",
-        "devops",
-        "aws",
-        "opinionated"
-    ],
-    "files": [
-        "*.js",
-        "lib/*.js"
-    ],
-    "exports": {
-        "./context": "./context.js",
-        "./http": "./http.js"
-    },
-    "dependencies": {
-        "@aws-crypto/sha256-js": "2.0.2",
-        "@aws-sdk/signature-v4": "3.178.0",
-        "@riddance/service": "git@github.com:hiddengemgroup/node-service.git#v0.0.7",
-        "@riddance/host": "0.0.7",
-        "jsonwebtoken": "8.5.1",
-        "node-fetch": "3.2.8"
-    },
-    "devDependencies": {
-        "@riddance/env": "0.0.3",
-        "@types/jsonwebtoken": "8.5.8",
-        "@types/node": "^16"
-    },
-    "scripts": {
-        "prepare": "tsc",
-        "watch": "watch"
-    }
+  "name": "@riddance/aws-host",
+  "version": "0.0.6",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  },
+  "keywords": [
+    "riddance",
+    "serverless",
+    "environment",
+    "devops",
+    "aws",
+    "opinionated"
+  ],
+  "files": [
+    "*.js",
+    "lib/*.js"
+  ],
+  "exports": {
+    "./context": "./context.js",
+    "./http": "./http.js"
+  },
+  "dependencies": {
+    "@aws-crypto/sha256-js": "2.0.2",
+    "@aws-sdk/signature-v4": "3.226.0",
+    "@riddance/service": "0.0.11",
+    "@riddance/host": "0.0.11",
+    "@riddance/fetch": "0.0.6"
+  },
+  "devDependencies": {
+    "@riddance/env": "0.2.4"
+  },
+  "scripts": {
+    "prepare": "tsc",
+    "start": "watch"
+  }
 }
