@@ -5,7 +5,7 @@ import { AwsContext, createAwsContext } from './context.js'
 
 export * from '@riddance/service/http'
 
-interface HttpResponse {
+type HttpResponse = {
     statusCode: string | number
     headers?: { [key: string]: string }
     multiValueHeaders?: { [key: string]: string[] }
@@ -13,14 +13,14 @@ interface HttpResponse {
     isBase64Encoded?: boolean
 }
 
-interface CommonRequestEvent {
+type CommonRequestEvent = {
     pathParameters: { [key: string]: string }
     stageVariables: { [key: string]: string }
     body?: string
     isBase64Encoded: boolean
 }
 
-interface RestRequestEvent extends CommonRequestEvent {
+type RestRequestEvent = {
     resource: string
     path: string
     httpMethod: string
@@ -41,9 +41,9 @@ interface RestRequestEvent extends CommonRequestEvent {
     headers: { [key: string]: string }
     multiValueHeaders: { [key: string]: string[] }
     multiValueQueryStringParameters: { [key: string]: string[] }
-}
+} & CommonRequestEvent
 
-interface HttpRequestEvent extends CommonRequestEvent {
+type HttpRequestEvent = {
     version: '2.0'
     routeKey: string
     rawPath: string
@@ -69,7 +69,7 @@ interface HttpRequestEvent extends CommonRequestEvent {
         time: string
         timeEpoch: number
     }
-}
+} & CommonRequestEvent
 
 type RequestEvent = HttpRequestEvent | RestRequestEvent
 

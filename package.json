@@ -1,6 +1,6 @@
 {
   "name": "@riddance/aws-host",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -23,17 +23,19 @@
     "./http": "./http.js"
   },
   "dependencies": {
-    "@aws-crypto/sha256-js": "2.0.2",
-    "@aws-sdk/signature-v4": "3.226.0",
-    "@riddance/service": "0.0.11",
-    "@riddance/host": "0.0.11",
-    "@riddance/fetch": "0.0.6"
+    "@aws-crypto/sha256-js": "3.0.0",
+    "@aws-sdk/signature-v4": "3.254.0",
+    "@riddance/service": "0.0.13",
+    "@riddance/host": "0.0.12",
+    "@riddance/fetch": "0.0.7"
   },
   "devDependencies": {
-    "@riddance/env": "0.2.4"
+    "@riddance/env": "0.2.9"
   },
   "scripts": {
-    "prepare": "tsc",
-    "start": "watch"
+    "start": "riddance-watch",
+    "prepack": "riddance-build",
+    "prepublishOnly": "riddance-prepublish",
+    "postpublish": "riddance-sync"
   }
 }

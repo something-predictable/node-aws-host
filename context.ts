@@ -6,7 +6,7 @@ import { SnsEventTransport } from './lib/sns.js'
 
 export * from '@riddance/service/context'
 
-export interface AwsContext {
+export type AwsContext = {
     getRemainingTimeInMillis(): number
     readonly functionName: string
     readonly functionVersion: string
