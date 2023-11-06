@@ -90,6 +90,7 @@ async function asyncIndex(
         awsContext,
         req.stageVariables,
         clientFromHeaders(req.headers),
+        handler.config,
         handler.meta,
     )
 

@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { ClientInfo, createContext, LogEntry, LogTransport } from '@riddance/host/context'
-import { Metadata } from '@riddance/host/registry'
+import { FullConfiguration, Metadata } from '@riddance/host/registry'
 import { randomUUID } from 'node:crypto'
 import { SnsEventTransport } from './lib/sns.js'
 
@@ -61,6 +61,7 @@ export function createAwsContext(
     context: AwsContext,
     stageVariables: { [key: string]: string },
     client: ClientInfo,
+    config?: FullConfiguration,
     meta?: Metadata,
 ) {
     const ctx = createContext(
@@ -69,6 +70,7 @@ export function createAwsContext(
         new SnsEventTransport(),
         { default: 15 },
         new AbortController(),
+        config,
         meta,
         {
             ...process.env,
