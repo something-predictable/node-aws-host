@@ -113,20 +113,24 @@ async function asyncIndex(
         success,
     )
 
-    callback(
-        undefined,
-        Buffer.isBuffer(result.body)
-            ? {
-                  statusCode: result.status,
-                  headers: result.headers,
-                  body: result.body.toString('base64'),
-              }
-            : {
-                  statusCode: result.status,
-                  headers: result.headers,
-                  body: result.body,
-              },
-    )
+    try {
+        callback(
+            undefined,
+            Buffer.isBuffer(result.body)
+                ? {
+                      statusCode: result.status,
+                      headers: result.headers,
+                      body: result.body.toString('base64'),
+                  }
+                : {
+                      statusCode: result.status,
+                      headers: result.headers,
+                      body: result.body,
+                  },
+        )
+    } catch (e) {
+        log.fatal('Error sending response to Lambda.', e)
+    }
 
     await measure(log, 'flush', flush)
 }
@@ -137,5 +141,5 @@ export function awsHandler(
     callback: (error: unknown, response: HttpResponse | undefined) => void,
 ) {
     context.callbackWaitsForEmptyEventLoop = false
-    asyncIndex(req, context, callback).catch(e => callback(e, undefined))
+    asyncIndex(req, context, callback).catch((e: unknown) => setImmediate(callback, e, undefined))
 }

@@ -49,7 +49,7 @@ const hostInfo = {
         id: randomUUID().replaceAll('-', ''),
     },
     nodejs: {
-        version: process.version.substring(1),
+        version: process.version.slice(1),
     },
     function: {
         version: process.env.AWS_LAMBDA_FUNCTION_VERSION,
