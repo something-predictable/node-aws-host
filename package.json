@@ -1,6 +1,6 @@
 {
   "name": "@riddance/aws-host",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -25,12 +25,12 @@
   "dependencies": {
     "@aws-crypto/sha256-js": "5.2.0",
     "@riddance/fetch": "0.1.2",
-    "@riddance/host": "0.1.1",
-    "@riddance/service": "0.1.1",
-    "@smithy/signature-v4": "4.1.0"
+    "@riddance/host": "0.1.2",
+    "@riddance/service": "0.1.2",
+    "@smithy/signature-v4": "4.2.0"
   },
   "devDependencies": {
-    "@riddance/env": "0.6.3"
+    "@riddance/env": "0.6.4"
   },
   "scripts": {
     "start": "riddance-watch",
