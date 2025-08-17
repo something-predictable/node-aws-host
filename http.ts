@@ -122,6 +122,7 @@ async function asyncIndex(
                       statusCode: result.status,
                       headers: result.headers,
                       body: result.body.toString('base64'),
+                      isBase64Encoded: true,
                   }
                 : {
                       statusCode: result.status,
