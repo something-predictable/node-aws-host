@@ -34,6 +34,7 @@ async function asyncIndex(
         },
         handler.config,
         handler.meta,
+        awsContext.invokedFunctionArn.split(':')[4],
     )
 
     await triggerTimer(

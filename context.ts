@@ -1,5 +1,10 @@
-/* eslint-disable no-console */
-import { ClientInfo, createContext, LogEntry, LogTransport } from '@riddance/host/context'
+import {
+    ClientInfo,
+    createContext,
+    LogEntry,
+    LogTransport,
+    type EventTransport,
+} from '@riddance/host/context'
 import { FullConfiguration, Metadata } from '@riddance/host/registry'
 import { randomUUID } from 'node:crypto'
 import { SnsEventTransport } from './lib/sns.js'
@@ -19,6 +24,7 @@ export type AwsContext = {
     callbackWaitsForEmptyEventLoop: boolean
 }
 
+/* eslint-disable no-console */
 class ConsoleLogger implements LogTransport {
     sendEntries(entries: LogEntry[]) {
         for (const entry of entries) {
@@ -62,21 +68,27 @@ export function createAwsContext(
     context: AwsContext,
     stageVariables: { [key: string]: string },
     client: ClientInfo,
-    config?: FullConfiguration,
-    meta?: Metadata,
+    config: FullConfiguration | undefined,
+    meta: Metadata | undefined,
+    account: string | undefined,
 ) {
+    const env = {
+        ...process.env,
+        ...stageVariables,
+    } as { [key: string]: string }
     const ctx = createContext(
         client,
         [consoleLogger],
-        new SnsEventTransport(),
+        account
+            ? new SnsEventTransport(client, { env, meta }, account)
+            : new ErrorEventTransport(
+                  new Error('Error sending event, could not determine account from Lambda ARN.'),
+              ),
         { default: 15 },
         new AbortController(),
         config,
         meta,
-        {
-            ...process.env,
-            ...stageVariables,
-        } as { [key: string]: string },
+        env,
     )
     ctx.log.enrichReserved({
         host: hostInfo,
@@ -88,4 +100,16 @@ export function createAwsContext(
         },
     })
     return ctx
+}
+
+class ErrorEventTransport implements EventTransport {
+    readonly #error: Error
+
+    constructor(error: Error) {
+        this.#error = error
+    }
+
+    sendEvent() {
+        return Promise.reject(this.#error)
+    }
 }

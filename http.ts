@@ -93,6 +93,7 @@ async function asyncIndex(
         clientFromHeaders(req.headers),
         handler.config,
         handler.meta,
+        awsContext.invokedFunctionArn.split(':')[4],
     )
 
     if (req.body && req.isBase64Encoded) {

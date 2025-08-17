@@ -1,6 +1,6 @@
 {
   "name": "@riddance/aws-host",
-  "version": "0.0.13",
+  "version": "0.1.0",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -21,10 +21,10 @@
   "exports": {
     "./context": "./context.js",
     "./http": "./http.js",
-    "./timer": "./timer.js"
+    "./timer": "./timer.js",
+    "./event": "./event.js"
   },
   "dependencies": {
-    "@aws-crypto/sha256-js": "5.2.0",
     "@riddance/fetch": "0.1.2",
     "@riddance/host": "0.2.0",
     "@riddance/service": "0.2.0",
