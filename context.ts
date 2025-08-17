@@ -4,6 +4,7 @@ import { FullConfiguration, Metadata } from '@riddance/host/registry'
 import { randomUUID } from 'node:crypto'
 import { SnsEventTransport } from './lib/sns.js'
 
+export { setMeta } from '@riddance/host/registry'
 export * from '@riddance/service/context'
 
 export type AwsContext = {

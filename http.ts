@@ -3,6 +3,7 @@ import { Json, measure } from '@riddance/host/lib/http'
 import { getHandlers } from '@riddance/host/registry'
 import { AwsContext, createAwsContext } from './context.js'
 
+export { setMeta } from '@riddance/host/registry'
 export * from '@riddance/service/http'
 
 type HttpResponse = {
