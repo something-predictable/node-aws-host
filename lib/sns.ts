@@ -3,6 +3,7 @@ import { EventTransport, type ClientInfo } from '@riddance/host/context'
 import type { Metadata } from '@riddance/host/registry'
 import { SignatureV4 } from '@smithy/signature-v4'
 import { createHash, createHmac, randomUUID, type Hash } from 'node:crypto'
+import { brotliCompress } from 'node:zlib'
 import type { Environment, Json } from '../context.js'
 
 export class SnsEventTransport implements EventTransport {
@@ -41,6 +42,8 @@ export class SnsEventTransport implements EventTransport {
         signal: AbortSignal,
     ) {
         try {
+            const { message, additionalAttributes } = await prepareMessage(data, this.#attributes)
+
             await awsFetchOK(
                 this.#env,
                 this.#baseUrl,
@@ -54,11 +57,12 @@ export class SnsEventTransport implements EventTransport {
                         Version: '2010-03-31',
                         Action: 'Publish',
                         TopicArn: `${this.#baseArn}${topic}-${type}`,
-                        Message: JSON.stringify(data),
+                        Message: message ?? 'null',
                         Subject: subject,
                         MessageId: messageId ?? randomUUID().replaceAll('-', ''),
                         Type: type,
                         ...this.#attributes,
+                        ...additionalAttributes,
                     }).toString(),
                     signal,
                 },
@@ -73,17 +77,60 @@ export class SnsEventTransport implements EventTransport {
     }
 }
 
-function asMessageAttributes(obj: { [key: string]: string | number | undefined }) {
+async function prepareMessage(
+    data:
+        | {
+              readonly [key: string]: Json
+          }
+        | undefined,
+    baseAttributes: { [key: string]: string },
+) {
+    if (!data) {
+        return {}
+    }
+    const jsonMessage = JSON.stringify(data)
+    if (jsonMessage.length < 8192) {
+        return { message: jsonMessage }
+    }
+
+    return {
+        message: await compressMessage(jsonMessage),
+        additionalAttributes: asMessageAttributes({ 'content-encoding': 'br' }, baseAttributes),
+    }
+}
+
+async function compressMessage(jsonMessage: string) {
+    const compressed = await brotliCompressAsync(jsonMessage)
+    return compressed.toString('base64')
+}
+
+function brotliCompressAsync(data: string): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        brotliCompress(Buffer.from(data, 'utf8'), (err, result) => {
+            if (err) {
+                reject(err)
+                return
+            }
+            resolve(result)
+        })
+    })
+}
+
+function asMessageAttributes(
+    obj: { [key: string]: string | number | undefined },
+    existingAttributes?: { [key: string]: unknown },
+) {
+    const baseIndex = existingAttributes ? Object.keys(existingAttributes).length / 3 + 1 : 1
     return Object.fromEntries(
         Object.entries(obj)
             .filter(withoutUndefinedValue)
             .flatMap(([k, v], ix) => [
-                [`MessageAttributes.entry.${ix + 1}.Name`, k],
+                [`MessageAttributes.entry.${baseIndex + ix}.Name`, k],
                 [
-                    `MessageAttributes.entry.${ix + 1}.Value.DataType`,
+                    `MessageAttributes.entry.${baseIndex + ix}.Value.DataType`,
                     typeof v === 'number' ? 'Number' : 'String',
                 ],
-                [`MessageAttributes.entry.${ix + 1}.Value.StringValue`, v.toString()],
+                [`MessageAttributes.entry.${baseIndex + ix}.Value.StringValue`, v.toString()],
             ]),
     )
 }

@@ -2,6 +2,7 @@ import type { ClientInfo } from '@riddance/host/context'
 import { handle } from '@riddance/host/event'
 import { measure, type Json } from '@riddance/host/lib/event'
 import { getHandlers } from '@riddance/host/registry'
+import { brotliDecompress } from 'node:zlib'
 import { AwsContext, createAwsContext } from './context.js'
 
 export { setMeta } from '@riddance/host/registry'
@@ -64,7 +65,7 @@ async function asyncIndex(
 
     try {
         await Promise.all(
-            event.Records.map(r =>
+            event.Records.map(async r =>
                 handle(
                     log,
                     context,
@@ -74,7 +75,7 @@ async function asyncIndex(
                         subject: r.Sns.Subject!,
                         timestamp: new Date(r.Sns.Timestamp),
                         messageId: r.Sns.MessageId,
-                        event: eventFromMessage(r.Sns.Message),
+                        event: await eventFromMessage(r.Sns.Message, r.Sns.MessageAttributes),
                     },
                     success,
                 ),
@@ -109,13 +110,36 @@ function clientFromAttributes(attributes: SNSMessageAttributes | undefined): Cli
     }
 }
 
-function eventFromMessage(message: string) {
+async function eventFromMessage(message: string, attributes?: SNSMessageAttributes) {
     if (!message) {
         return undefined
     }
-    return JSON.parse(message) as {
+
+    const messageToParse = await getMessageToParse(message, attributes)
+    return JSON.parse(messageToParse) as {
         readonly [key: string]: Json
     }
+}
+
+async function getMessageToParse(message: string, attributes?: SNSMessageAttributes) {
+    const isCompressed = attributes?.['content-encoding']?.Value === 'br'
+    if (!isCompressed) {
+        return message
+    }
+    const decompressed = await decompress(Buffer.from(message, 'base64'))
+    return decompressed.toString('utf8')
+}
+
+function decompress(data: Buffer) {
+    return new Promise<Buffer>((resolve, reject) => {
+        brotliDecompress(data, (err, result) => {
+            if (err) {
+                reject(err)
+                return
+            }
+            resolve(result)
+        })
+    })
 }
 
 export function awsHandler(
