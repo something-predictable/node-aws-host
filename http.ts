@@ -135,7 +135,7 @@ async function asyncIndex(
         log.fatal('Error sending response to Lambda.', e)
     }
 
-    await measure(log, 'flush', flush)
+    await measure(log.enrichReserved({ meta: handler.meta }), 'flush', flush)
 }
 
 export function awsHandler(

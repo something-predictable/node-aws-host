@@ -86,7 +86,11 @@ async function asyncIndex(
     for (const failed of notSent) {
         log.fatal('Error sending event.', failed.reason)
     }
-    if (malformedEvents.length !== 0 || notSent.length !== 0) {
+    if (
+        malformedEvents.length !== 0 ||
+        notSent.length !== 0 ||
+        sent.some(e => e.status === 'fulfilled' && !e.value)
+    ) {
         callback(new AggregateError([...malformedEvents, ...notSent], 'Error handling event.'))
         await measure(log, 'flush', flush)
         return
@@ -98,7 +102,7 @@ async function asyncIndex(
         log.fatal('Error sending result to Lambda.', e)
     }
 
-    await measure(log, 'flush', flush)
+    await measure(log.enrichReserved({ meta: handler.meta }), 'flush', flush)
 }
 
 function clientFromAttributes(attributes: SNSMessageAttributes | undefined): ClientInfo {

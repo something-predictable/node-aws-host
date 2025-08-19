@@ -26,8 +26,8 @@
   },
   "dependencies": {
     "@riddance/fetch": "0.1.2",
-    "@riddance/host": "0.2.0",
-    "@riddance/service": "0.2.0",
+    "@riddance/host": "0.2.1",
+    "@riddance/service": "0.2.1",
     "@smithy/signature-v4": "5.1.3"
   },
   "devDependencies": {
