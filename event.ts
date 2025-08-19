@@ -1,3 +1,4 @@
+import { missing } from '@riddance/fetch'
 import type { ClientInfo } from '@riddance/host/context'
 import { handle } from '@riddance/host/event'
 import { measure, type Json } from '@riddance/host/lib/event'
@@ -63,35 +64,38 @@ async function asyncIndex(
         awsContext.invokedFunctionArn.split(':')[4],
     )
 
+    const events = await Promise.allSettled(
+        event.Records.map(async r => ({
+            subject: r.Sns.Subject ?? missing('subject'),
+            timestamp: new Date(r.Sns.Timestamp),
+            messageId: r.Sns.MessageId,
+            event: await eventFromMessage(r.Sns.Message, r.Sns.MessageAttributes),
+        })),
+    )
+    const malformedEvents = events.filter(e => e.status === 'rejected')
+    for (const failed of malformedEvents) {
+        log.fatal('Error parsing event.', failed.reason)
+    }
+
+    const sent = await Promise.allSettled(
+        events
+            .filter(e => e.status === 'fulfilled')
+            .map(e => handle(log, context, handler, e.value, success)),
+    )
+    const notSent = sent.filter(e => e.status === 'rejected')
+    for (const failed of notSent) {
+        log.fatal('Error sending event.', failed.reason)
+    }
+    if (malformedEvents.length !== 0 || notSent.length !== 0) {
+        callback(new AggregateError([...malformedEvents, ...notSent], 'Error handling event.'))
+        await measure(log, 'flush', flush)
+        return
+    }
+
     try {
-        await Promise.all(
-            event.Records.map(async r =>
-                handle(
-                    log,
-                    context,
-                    handler,
-                    {
-                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                        subject: r.Sns.Subject!,
-                        timestamp: new Date(r.Sns.Timestamp),
-                        messageId: r.Sns.MessageId,
-                        event: await eventFromMessage(r.Sns.Message, r.Sns.MessageAttributes),
-                    },
-                    success,
-                ),
-            ),
-        )
-        try {
-            callback(undefined)
-        } catch (e) {
-            log.fatal('Error success result to Lambda.', e)
-        }
+        callback(undefined)
     } catch (e) {
-        try {
-            callback(e)
-        } catch (ex) {
-            log.fatal('Error sending error result to Lambda.', ex)
-        }
+        log.fatal('Error sending result to Lambda.', e)
     }
 
     await measure(log, 'flush', flush)
