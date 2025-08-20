@@ -1,4 +1,4 @@
-import { fetchOK, missing } from '@riddance/fetch'
+import { fetchOK, missing, thrownHasStatus } from '@riddance/fetch'
 import { EventTransport, type ClientInfo } from '@riddance/host/context'
 import type { Metadata } from '@riddance/host/registry'
 import { SignatureV4 } from '@smithy/signature-v4'
@@ -70,9 +70,10 @@ export class SnsEventTransport implements EventTransport {
                 { topic, type, data },
             )
         } catch (e) {
-            if ((e as { status?: unknown }).status !== 404) {
-                throw e
+            if (thrownHasStatus(e, 404)) {
+                return
             }
+            throw e
         }
     }
 }
