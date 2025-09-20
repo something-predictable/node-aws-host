@@ -90,7 +90,7 @@ export function createAwsContext(
         meta,
         env,
     )
-    ctx.log.enrichReserved({
+    ctx.log = ctx.log.enrichReserved({
         host: hostInfo,
         function: {
             name: context.functionName,
