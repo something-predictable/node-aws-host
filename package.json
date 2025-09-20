@@ -26,12 +26,12 @@
   },
   "dependencies": {
     "@riddance/fetch": "0.1.3",
-    "@riddance/host": "0.2.3",
-    "@riddance/service": "0.2.3",
-    "@smithy/signature-v4": "5.1.3"
+    "@riddance/host": "0.2.4",
+    "@riddance/service": "0.2.6",
+    "@smithy/signature-v4": "5.2.1"
   },
   "devDependencies": {
-    "@riddance/env": "0.9.1"
+    "@riddance/env": "0.9.3"
   },
   "scripts": {
     "start": "riddance-watch",
