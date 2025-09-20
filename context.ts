@@ -66,6 +66,10 @@ const hostInfo = {
 
 export function createAwsContext(
     context: AwsContext,
+    timeouts: {
+        default: number
+        cap?: number
+    },
     stageVariables: { [key: string]: string },
     client: ClientInfo,
     config: FullConfiguration | undefined,
@@ -84,7 +88,7 @@ export function createAwsContext(
             : new ErrorEventTransport(
                   new Error('Error sending event, could not determine account from Lambda ARN.'),
               ),
-        { default: 15 },
+        timeouts,
         new AbortController(),
         config,
         meta,

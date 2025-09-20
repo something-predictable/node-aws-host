@@ -28,6 +28,7 @@ async function asyncIndex(
     }
     const { log, context, success, flush } = createAwsContext(
         awsContext,
+        { default: 300 },
         {},
         {
             operationId: event.id,

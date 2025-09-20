@@ -57,6 +57,7 @@ async function asyncIndex(
     }
     const { log, context, success, flush } = createAwsContext(
         awsContext,
+        { default: 150 },
         {},
         clientFromAttributes(event.Records[0]?.Sns.MessageAttributes),
         handler.config,

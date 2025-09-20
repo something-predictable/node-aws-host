@@ -89,6 +89,7 @@ async function asyncIndex(
     }
     const { log, context, success, flush } = createAwsContext(
         awsContext,
+        { default: 15 },
         req.stageVariables,
         clientFromHeaders(req.headers),
         handler.config,
