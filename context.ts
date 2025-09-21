@@ -79,7 +79,7 @@ export function createAwsContext(
     const env = {
         ...process.env,
         ...stageVariables,
-    } as { [key: string]: string }
+    }
     const ctx = createContext(
         client,
         [consoleLogger],

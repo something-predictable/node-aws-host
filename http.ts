@@ -74,8 +74,8 @@ type HttpRequestEvent = {
 
 type RequestEvent = HttpRequestEvent | RestRequestEvent
 
-function isRestRequest(request: RequestEvent): request is RestRequestEvent {
-    return !(request as { version: unknown }).version
+function isHttpRequest(request: RequestEvent) {
+    return 'version' in request
 }
 
 async function asyncIndex(
@@ -106,11 +106,11 @@ async function asyncIndex(
         handler,
         {
             headers: req.headers,
-            uri: isRestRequest(req)
-                ? `https://${req.requestContext.domainName}${req.requestContext.path}`
-                : `https://${req.requestContext.domainName}${req.rawPath}${
+            uri: isHttpRequest(req)
+                ? `https://${req.requestContext.domainName}${req.rawPath}${
                       req.rawQueryString ? '?' + req.rawQueryString : ''
-                  }`,
+                  }`
+                : `https://${req.requestContext.domainName}${req.requestContext.path}`,
             json: req.body ? (JSON.parse(req.body) as Json) : undefined,
         },
         success,

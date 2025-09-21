@@ -8,13 +8,13 @@ import type { Environment, Json } from '../context.js'
 
 export class SnsEventTransport implements EventTransport {
     readonly #attributes: { [key: string]: string }
-    readonly #env: Environment
+    readonly #env: Partial<Environment>
     readonly #baseUrl: string
     readonly #baseArn: string
 
     constructor(
         client: ClientInfo,
-        context: { env: Environment; meta?: Metadata },
+        context: { env: Partial<Environment>; meta?: Metadata },
         account: string,
     ) {
         this.#attributes = asMessageAttributes(client)
@@ -150,7 +150,7 @@ type RequestInit = {
 }
 
 async function awsFetchOK(
-    env: { [key: string]: string },
+    env: { [key: string]: string | undefined },
     url: string,
     init: RequestInit | undefined,
     errorMessage: string,
@@ -177,7 +177,7 @@ async function awsFetchOK(
 }
 
 async function awsHeaders(
-    env: { [key: string]: string },
+    env: { [key: string]: string | undefined },
     service: string,
     url: string,
     method: string,
