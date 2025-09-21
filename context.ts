@@ -58,10 +58,7 @@ const hostInfo = {
     nodejs: {
         version: process.version.slice(1),
     },
-    function: {
-        version: process.env.AWS_LAMBDA_FUNCTION_VERSION,
-        executionEnvironment: process.env.AWS_EXECUTION_ENV,
-    },
+    environment: process.env.AWS_EXECUTION_ENV,
 }
 
 export function createAwsContext(
@@ -98,8 +95,7 @@ export function createAwsContext(
         host: hostInfo,
         function: {
             name: context.functionName,
-            version: context.functionVersion,
-            memoryLimit: context.memoryLimitInMB,
+            memory: context.memoryLimitInMB,
             timeout: context.getRemainingTimeInMillis(),
         },
     })
