@@ -1,10 +1,9 @@
-import { missing } from '@riddance/fetch'
 import type { ClientInfo } from '@riddance/host/context'
 import { handle } from '@riddance/host/event'
 import { measure, type Json } from '@riddance/host/lib/event'
 import { getHandlers } from '@riddance/host/registry'
 import { brotliDecompress } from 'node:zlib'
-import { AwsContext, createAwsContext } from './context.js'
+import { AwsContext, createAwsContext, missing } from './context.js'
 
 export { setMeta } from '@riddance/host/registry'
 export * from '@riddance/service/event'
@@ -46,11 +45,7 @@ type SNSEvent = {
     Records: SNSEventRecord[]
 }
 
-async function asyncIndex(
-    event: SNSEvent,
-    awsContext: AwsContext,
-    callback: (error: unknown) => void,
-) {
+export async function awsHandler(event: SNSEvent, awsContext: AwsContext) {
     const [handler] = getHandlers('event')
     if (!handler) {
         throw new Error('No event handler registered.')
@@ -92,15 +87,8 @@ async function asyncIndex(
         notSent.length !== 0 ||
         sent.some(e => e.status === 'fulfilled' && !e.value)
     ) {
-        callback(new AggregateError([...malformedEvents, ...notSent], 'Error handling event.'))
         await measure(log, 'flush', flush)
-        return
-    }
-
-    try {
-        callback(undefined)
-    } catch (e) {
-        log.fatal('Error sending result to Lambda.', e)
+        throw new AggregateError([...malformedEvents, ...notSent], 'Error handling event.')
     }
 
     await measure(log.enrichReserved({ meta: handler.meta }), 'flush', flush)
@@ -136,7 +124,7 @@ async function getMessageToParse(message: string, attributes?: SNSMessageAttribu
         return message
     }
     const decompressed = await decompress(Buffer.from(message, 'base64'))
-    return decompressed.toString('utf8')
+    return decompressed.toString('utf-8')
 }
 
 function decompress(data: Buffer) {
@@ -149,13 +137,4 @@ function decompress(data: Buffer) {
             resolve(result)
         })
     })
-}
-
-export function awsHandler(
-    event: SNSEvent,
-    context: AwsContext,
-    callback: (error: unknown) => void,
-) {
-    context.callbackWaitsForEmptyEventLoop = false
-    asyncIndex(event, context, callback).catch((e: unknown) => setImmediate(callback, e))
 }

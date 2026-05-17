@@ -17,11 +17,7 @@ type EventBridgeEvent = {
     source: string
 }
 
-async function asyncIndex(
-    event: EventBridgeEvent,
-    awsContext: AwsContext,
-    callback: (error: unknown) => void,
-) {
+export async function awsHandler(event: EventBridgeEvent, awsContext: AwsContext) {
     const [handler] = getHandlers('timer')
     if (!handler) {
         throw new Error('No timer handler registered.')
@@ -48,20 +44,5 @@ async function asyncIndex(
         success,
     )
 
-    try {
-        callback(undefined)
-    } catch (e) {
-        log.fatal('Error sending result to Lambda.', e)
-    }
-
     await measure(log.enrichReserved({ meta: handler.meta }), 'flush', flush)
-}
-
-export function awsHandler(
-    event: EventBridgeEvent,
-    context: AwsContext,
-    callback: (error: unknown) => void,
-) {
-    context.callbackWaitsForEmptyEventLoop = false
-    asyncIndex(event, context, callback).catch((e: unknown) => setImmediate(callback, e))
 }

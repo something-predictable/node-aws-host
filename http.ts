@@ -78,11 +78,7 @@ function isHttpRequest(request: RequestEvent) {
     return 'version' in request
 }
 
-async function asyncIndex(
-    req: RequestEvent,
-    awsContext: AwsContext,
-    callback: (error: unknown, response: HttpResponse | undefined) => void,
-) {
+export async function awsHandler(req: RequestEvent, awsContext: AwsContext): Promise<HttpResponse> {
     const [handler] = getHandlers('http')
     if (!handler) {
         throw new Error('No http handler registered.')
@@ -116,34 +112,18 @@ async function asyncIndex(
         success,
     )
 
-    try {
-        callback(
-            undefined,
-            Buffer.isBuffer(result.body)
-                ? {
-                      statusCode: result.status,
-                      headers: result.headers,
-                      body: result.body.toString('base64'),
-                      isBase64Encoded: true,
-                  }
-                : {
-                      statusCode: result.status,
-                      headers: result.headers,
-                      body: result.body,
-                  },
-        )
-    } catch (e) {
-        log.fatal('Error sending response to Lambda.', e)
-    }
-
+    const awsResult = Buffer.isBuffer(result.body)
+        ? {
+              statusCode: result.status,
+              headers: result.headers,
+              body: result.body.toString('base64'),
+              isBase64Encoded: true,
+          }
+        : {
+              statusCode: result.status,
+              headers: result.headers,
+              body: result.body,
+          }
     await measure(log.enrichReserved({ meta: handler.meta }), 'flush', flush)
-}
-
-export function awsHandler(
-    req: HttpRequestEvent,
-    context: AwsContext,
-    callback: (error: unknown, response: HttpResponse | undefined) => void,
-) {
-    context.callbackWaitsForEmptyEventLoop = false
-    asyncIndex(req, context, callback).catch((e: unknown) => setImmediate(callback, e, undefined))
+    return awsResult
 }

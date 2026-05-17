@@ -1,10 +1,11 @@
-import { fetchOK, missing, thrownHasStatus } from '@riddance/fetch'
+import { fetchOK, thrownHasStatus } from '@riddance/fetch'
 import { EventTransport, type ClientInfo } from '@riddance/host/context'
 import type { Metadata } from '@riddance/host/registry'
+import { missing } from '@riddance/service/context'
 import { SignatureV4 } from '@smithy/signature-v4'
 import { createHash, createHmac, randomUUID, type Hash } from 'node:crypto'
 import { brotliCompress } from 'node:zlib'
-import type { Environment, Json } from '../context.js'
+import { type Environment, type Json } from '../context.js'
 
 export class SnsEventTransport implements EventTransport {
     readonly #attributes: { [key: string]: string }
@@ -107,7 +108,7 @@ async function compressMessage(jsonMessage: string) {
 
 function brotliCompressAsync(data: string): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-        brotliCompress(Buffer.from(data, 'utf8'), (err, result) => {
+        brotliCompress(Buffer.from(data, 'utf-8'), (err, result) => {
             if (err) {
                 reject(err)
                 return
