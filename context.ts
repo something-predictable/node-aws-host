@@ -28,24 +28,28 @@ export type AwsContext = {
 class ConsoleLogger implements LogTransport {
     sendEntries(entries: LogEntry[]) {
         for (const entry of entries) {
-            switch (entry.level) {
-                case 'trace':
-                case 'debug':
-                    console.debug(entry.json)
-                    break
-                case 'info':
-                    console.log(entry.json)
-                    break
-                case 'warning':
-                    console.warn(entry.json)
-                    break
-                case 'error':
-                case 'fatal':
-                    console.error(entry.json)
-                    break
-            }
+            consoleLogEntry(entry)
         }
         return undefined
+    }
+}
+
+function consoleLogEntry(entry: LogEntry) {
+    switch (entry.level) {
+        case 'trace':
+        case 'debug':
+            console.debug(entry.json)
+            break
+        case 'info':
+            console.log(entry.json)
+            break
+        case 'warning':
+            console.warn(entry.json)
+            break
+        case 'error':
+        case 'fatal':
+            console.error(entry.json)
+            break
     }
 }
 

@@ -57,7 +57,7 @@ export async function awsHandler(event: SNSEvent, awsContext: AwsContext) {
         clientFromAttributes(event.Records[0]?.Sns.MessageAttributes),
         handler.config,
         handler.meta,
-        awsContext.invokedFunctionArn.split(':')[4],
+        awsContext.invokedFunctionArn.split(':', 5)[4],
     )
 
     const events = await Promise.allSettled(
