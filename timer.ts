@@ -3,6 +3,7 @@ import { getHandlers } from '@riddance/host/registry'
 import { triggerTimer } from '@riddance/host/timer'
 import { AwsContext, createAwsContext } from './context.js'
 
+export { setMeta } from '@riddance/host/registry'
 export * from '@riddance/service/timer'
 
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/b969f890000ff95740fd7b879cdf3b73e1ea0fe8/types/aws-lambda/trigger/eventbridge.d.ts
@@ -31,7 +32,7 @@ export async function awsHandler(event: EventBridgeEvent, awsContext: AwsContext
         },
         handler.config,
         handler.meta,
-        awsContext.invokedFunctionArn.split(':', 5)[4],
+        awsContext.invokedFunctionArn,
     )
 
     await triggerTimer(

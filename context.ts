@@ -6,6 +6,7 @@ import {
     type EventTransport,
 } from '@riddance/host/context'
 import { FullConfiguration, Metadata } from '@riddance/host/registry'
+import type { Environment } from '@riddance/service/context'
 import { randomUUID } from 'node:crypto'
 import { SnsEventTransport } from './lib/sns.js'
 
@@ -75,7 +76,7 @@ export function createAwsContext(
     client: ClientInfo,
     config: FullConfiguration | undefined,
     meta: Metadata | undefined,
-    account: string | undefined,
+    functionArn: string,
 ) {
     const env = {
         ...process.env,
@@ -84,11 +85,7 @@ export function createAwsContext(
     const ctx = createContext(
         client,
         [consoleLogger],
-        account
-            ? new SnsEventTransport(client, { env, meta }, account)
-            : new ErrorEventTransport(
-                  new Error('Error sending event, could not determine account from Lambda ARN.'),
-              ),
+        getEventTransport(client, env, meta, functionArn),
         timeouts,
         new AbortController(),
         config,
@@ -106,14 +103,28 @@ export function createAwsContext(
     return ctx
 }
 
-class ErrorEventTransport implements EventTransport {
-    readonly #error: Error
+function getEventTransport(
+    client: ClientInfo,
+    env: Partial<Environment>,
+    meta: Metadata | undefined,
+    functionArn: string,
+) {
+    try {
+        return new SnsEventTransport(client, env, meta, functionArn)
+    } catch (e) {
+        return new ErrorEventTransport(e)
+    }
+}
 
-    constructor(error: Error) {
+class ErrorEventTransport implements EventTransport {
+    readonly #error: unknown
+
+    constructor(error: unknown) {
         this.#error = error
     }
 
     sendEvent() {
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
         return Promise.reject(this.#error)
     }
 }

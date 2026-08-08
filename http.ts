@@ -90,7 +90,7 @@ export async function awsHandler(req: RequestEvent, awsContext: AwsContext): Pro
         clientFromHeaders(req.headers),
         handler.config,
         handler.meta,
-        awsContext.invokedFunctionArn.split(':', 5)[4],
+        awsContext.invokedFunctionArn,
     )
 
     if (req.body && req.isBase64Encoded) {

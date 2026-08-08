@@ -1,5 +1,5 @@
 import { fetchOK, thrownHasStatus } from '@riddance/fetch'
-import { EventTransport, type ClientInfo } from '@riddance/host/context'
+import { type ClientInfo, type EventTransport } from '@riddance/host/context'
 import type { Metadata } from '@riddance/host/registry'
 import { missing } from '@riddance/service/context'
 import { SignatureV4 } from '@smithy/signature-v4'
@@ -15,19 +15,22 @@ export class SnsEventTransport implements EventTransport {
 
     constructor(
         client: ClientInfo,
-        context: { env: Partial<Environment>; meta?: Metadata },
-        account: string,
+        env: Partial<Environment>,
+        meta: Metadata | undefined,
+        functionArn: string,
     ) {
         this.#attributes = asMessageAttributes(client)
-        this.#env = context.env
-        const region = context.env.AWS_REGION ?? 'us-east-1'
+        this.#env = env
+        const region = env.AWS_REGION ?? missing('AWS_REGION')
         this.#baseUrl = `https://sns.${region}.amazonaws.com`
         const prefix =
-            context.env.AWS_LAMBDA_FUNCTION_NAME?.slice(
+            env.AWS_LAMBDA_FUNCTION_NAME?.slice(
                 0,
-                -(context.meta?.packageName.length ?? 0) - (context.meta?.fileName.length ?? 0) - 2,
-            ) ?? 'AWS_LAMBDA_FUNCTION_NAME-missing'
-        this.#baseArn = `arn:aws:sns:${region}:${account}:${prefix}-`
+                -(meta?.packageName.length ?? missing('meta.packageName')) -
+                    (meta?.fileName.length ?? missing('meta.fileName')) -
+                    2,
+            ) ?? missing('AWS_LAMBDA_FUNCTION_NAME')
+        this.#baseArn = `arn:aws:sns:${region}:${functionArn.split(':', 5)[4] ?? missing('valid ARN')}:${prefix}-`
     }
 
     async sendEvent(
